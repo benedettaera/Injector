@@ -9,7 +9,7 @@ local function checkAuthorization()
     local authorizedUsers = {}
     local success, result = pcall(function()
         -- Replace this URL with your raw website URL containing the usernames
-        local url = "https://raw.githubusercontent.com/dalgacor1/Testnew/refs/heads/main/Newcome"
+        local url = "https://raw.githubusercontent.com/benedettaera/Injector/refs/heads/main/Key"
         local response = game:HttpGet(url, true)
         -- The website should return Lua code that defines a table like: return {"username1", "username2"}
         return loadstring(response)()
