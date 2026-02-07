@@ -8,20 +8,38 @@ local function checkAuthorization()
     -- Try to load authorized users from remote website
     local authorizedUsers = {}
     local success, result = pcall(function()
-        -- Replace this URL with your raw website URL containing the usernames
-        local url = "https://raw.githubusercontent.com/benedettaera/Injector/refs/heads/main/Key"
-        local response = game:HttpGet(url, true)
-        -- The website should return Lua code that defines a table like: return {"username1", "username2"}
-        return loadstring(response)()
+        -- Replace with your raw GitHub URL containing the usernames
+        local url = "https://raw.githubusercontent.com/benedettaera/Injector/main/Key"
+        
+        -- Use HttpService for HTTP requests
+        local httpService = game:GetService("HttpService")
+        local success2, response = pcall(function()
+            return httpService:GetAsync(url, true)
+        end)
+        
+        if success2 then
+            -- Execute the returned code which should be: return {"username1", "username2"}
+            local loadFunc, errorMsg = loadstring(response)
+            if loadFunc then
+                return loadFunc()
+            else
+                error("Loadstring error: " .. tostring(errorMsg))
+            end
+        else
+            error("HTTP request failed: " .. tostring(response))
+        end
     end)
     
     if success and type(result) == "table" then
         authorizedUsers = result
+        print("Loaded " .. #authorizedUsers .. " authorized users from website")
     else
         -- If website is down or returns invalid data, use fallback (optional)
-        -- You can leave it empty to deny all access when website is down
         authorizedUsers = {} -- No users authorized when website fails
         warn("Failed to load authorized users from website: " .. tostring(result))
+        
+        -- OPTIONAL: You can hardcode a fallback list here if you want
+        -- authorizedUsers = {"dalgacor3"}
     end
     
     -- Check if current user is in the authorized list
