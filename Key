@@ -1,1 +1,6 @@
-dalgacor3
+-- authorized_users.lua
+return {
+    "dalgacor3",
+    "seconduser",  -- Add more usernames here
+    "thirduser"
+}
