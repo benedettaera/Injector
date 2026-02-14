@@ -1204,13 +1204,13 @@ local function unlockWings()
     WingsButton.Text = "Loading..."
     WingsButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
     WingsButton.Active = false  -- Disable button while running
-    WingsStatus.Text = "Scanning bag..."
+    WingsStatus.Text = "Scanning..."
     
     -- Run in a separate thread to avoid freezing
     task.spawn(function()
         local bag = Player:FindFirstChild("Bag")
         if not bag then
-            WingsStatus.Text = "Bag folder not found!"
+            WingsStatus.Text = "not found!"
             wingsRunning = false
             WingsButton.Text = "Unlock Exclusive Wings"
             WingsButton.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
@@ -1231,7 +1231,7 @@ local function unlockWings()
         end
         
         if #ids == 0 then
-            WingsStatus.Text = "No exclusive wings found in bag."
+            WingsStatus.Text = "No exclusive wings found."
             wingsRunning = false
             WingsButton.Text = "Unlock Exclusive Wings"
             WingsButton.BackgroundColor3 = Color3.fromRGB(150, 0, 150)
@@ -1243,8 +1243,6 @@ local function unlockWings()
         table.sort(ids)
         local smallest = ids[1]
         local largest = ids[#ids]
-        
-        WingsStatus.Text = string.format("Found IDs from %d to %d. Unlocking...", smallest, largest)
         
         -- Get remote
         local remote = game:GetService("ReplicatedStorage"):WaitForChild("Msg"):WaitForChild("RemoteEvent")
