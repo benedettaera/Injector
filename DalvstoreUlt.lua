@@ -1,1 +1,1 @@
-loadstring(HttpGet:(https://raw.githubusercontent.com/sherraKey/keycheck/refs/heads/main/DalvstoreUlt.lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/sherraKey/keycheck/refs/heads/main/DalvstoreUlt.lua"))()
