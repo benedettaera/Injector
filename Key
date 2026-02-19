@@ -1,7 +1,7 @@
--- authorized_users.lua
+-- authorized_userslua_injectprivaten
 return {
     "dalgacor3",
-    "Bloodykite",
+    "null",
     "Bunniesham",
     "ULTIMATED_12",
     "MyGOD_1299",
