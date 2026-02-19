@@ -6,7 +6,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 
 local function checkAuthorization()
     -- Load authorized users from remote website using loadstring
-    local authorizedUsers = loadstring(game:HttpGet("https://raw.githubusercontent.com/sherraKey/keycheck/refs/heads/main/Inj34Keys"))()
+    local authorizedUsers = loadstring(game:HttpGet("https://raw.githubusercontent.com/benedettaera/Injector/refs/heads/main/Key"))()
     
     -- Check if current user is in the authorized list
     local isAuthorized = false
@@ -128,7 +128,7 @@ if not isAuthorized then
 end
 
 -- If authorized, continue with the rest of the script
-print("Authorized! ")
+print("Authorized! Script can continue...")
 -- ... rest of your script remains exactly the same ...
 -- ================= MAIN SCRIPT (ONLY EXECUTES IF AUTHORIZED) =================
 
