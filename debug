@@ -3,12 +3,12 @@ local player = game.Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
 gui.Name = "SouvenirManager"
 gui.Parent = player:WaitForChild("PlayerGui")
-gui.ResetOnSpawn = false  -- Keeps GUI when respawning
-gui.DisplayOrder = 10      -- Keep on top
+gui.ResetOnSpawn = false
+gui.DisplayOrder = 10
 
--- Main frame – centered using AnchorPoint
+-- Main frame – centered
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 400, 0, 200)  -- Reduced height (no teleport elements)
+frame.Size = UDim2.new(0, 400, 0, 160)  -- Reduced height (only one button now)
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -26,7 +26,7 @@ titleBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 titleBar.BorderSizePixel = 0
 titleBar.Parent = frame
 
--- Title text (left side)
+-- Title text
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(0.5, 0, 1, 0)
 title.Position = UDim2.new(0, 5, 0, 0)
@@ -38,14 +38,13 @@ title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = titleBar
 
--- Branding container (Facebook logo + Dalvstore) on the right
+-- Branding container (Facebook logo + Dalvstore)
 local branding = Instance.new("Frame")
 branding.Size = UDim2.new(0, 130, 1, 0)
 branding.Position = UDim2.new(1, -135, 0, 0)
 branding.BackgroundTransparency = 1
 branding.Parent = titleBar
 
--- Horizontal layout for branding
 local layout = Instance.new("UIListLayout")
 layout.FillDirection = Enum.FillDirection.Horizontal
 layout.VerticalAlignment = Enum.VerticalAlignment.Center
@@ -88,32 +87,21 @@ dalvText.TextSize = 16
 dalvText.TextXAlignment = Enum.TextXAlignment.Left
 dalvText.Parent = branding
 
--- Claim Codes button
+-- Claim Codes button (now does both claim and open)
 local claimBtn = Instance.new("TextButton")
 claimBtn.Size = UDim2.new(0.9, 0, 0, 40)
-claimBtn.Position = UDim2.new(0.05, 0, 0.25, 0)  -- Adjusted for new layout
+claimBtn.Position = UDim2.new(0.05, 0, 0.3, 0)
 claimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
 claimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-claimBtn.Text = "Claim Codes"
+claimBtn.Text = "Claim Codes & Open Boxes"
 claimBtn.Font = Enum.Font.SourceSansBold
-claimBtn.TextSize = 20
+claimBtn.TextSize = 18
 claimBtn.Parent = frame
-
--- Open Boxes button
-local openBtn = Instance.new("TextButton")
-openBtn.Size = UDim2.new(0.9, 0, 0, 40)
-openBtn.Position = UDim2.new(0.05, 0, 0.55, 0)  -- Adjusted for new layout
-openBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 100)
-openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-openBtn.Text = "Open Boxes from Bag"
-openBtn.Font = Enum.Font.SourceSansBold
-openBtn.TextSize = 18
-openBtn.Parent = frame
 
 -- Status label
 local statusLabel = Instance.new("TextLabel")
 statusLabel.Size = UDim2.new(0.9, 0, 0, 50)
-statusLabel.Position = UDim2.new(0.05, 0, 0.75, 0)
+statusLabel.Position = UDim2.new(0.05, 0, 0.6, 0)
 statusLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 statusLabel.TextColor3 = Color3.fromRGB(255, 255, 200)
 statusLabel.Text = "Ready"
@@ -142,59 +130,62 @@ local function setStatus(text)
 	statusLabel.Text = text
 end
 
--- Claim Codes button
+-- Function to open boxes (extracted from previous open button logic)
+local function openBoxesFromBag()
+	local bag = player:FindFirstChild("Bag")
+	if not bag then
+		setStatus("Bag not found!")
+		return
+	end
+	
+	local boxItems = {}
+	for _, child in ipairs(bag:GetChildren()) do
+		if child:IsA("NumberValue") and child.Name:match("^16000%d+$") then
+			local count = child.Value
+			if count and count > 0 then
+				table.insert(boxItems, {id = child.Name, count = count})
+			end
+		end
+	end
+	
+	if #boxItems == 0 then
+		setStatus("No NumberValue items with names starting with 16000 found in Bag.")
+		return
+	end
+	
+	setStatus("Found " .. #boxItems .. " box types. Opening...")
+	
+	local totalOpened = 0
+	for _, item in ipairs(boxItems) do
+		local id = tonumber(item.id)
+		if id then
+			for i = 1, item.count do
+				pcall(function()
+					souvenirRemote:InvokeServer("OpenSouvenirBox", id)
+				end)
+				totalOpened = totalOpened + 1
+				task.wait(0.1)  -- delay between opens
+			end
+		end
+	end
+	
+	setStatus("Opened " .. totalOpened .. " boxes.")
+end
+
+-- Claim Codes button handler
 claimBtn.MouseButton1Click:Connect(function()
+	-- Step 1: Claim codes
 	setStatus("Claiming codes...")
 	for _, code in ipairs(codes) do
 		pcall(function()
 			codeRemote:InvokeServer(code)
 		end)
-		task.wait(0.05)  -- small delay to avoid flooding
+		task.wait(0.05)
 	end
-	setStatus("Code claiming finished.")
-end)
-
--- Open Boxes button (uses NumberValue items in Bag)
-openBtn.MouseButton1Click:Connect(function()
+	setStatus("Codes claimed. Opening boxes...")
+	
+	-- Step 2: Open boxes
 	task.spawn(function()
-		local bag = player:FindFirstChild("Bag")
-		if not bag then
-			setStatus("Bag not found!")
-			return
-		end
-		
-		-- Find all NumberValue children whose names start with "16000"
-		local boxItems = {}
-		for _, child in ipairs(bag:GetChildren()) do
-			if child:IsA("NumberValue") and child.Name:match("^16000%d+$") then
-				local count = child.Value
-				if count and count > 0 then
-					table.insert(boxItems, {id = child.Name, count = count})
-				end
-			end
-		end
-		
-		if #boxItems == 0 then
-			setStatus("No NumberValue items with names starting with 16000 found in Bag.")
-			return
-		end
-		
-		setStatus("Found " .. #boxItems .. " box types. Opening...")
-		
-		local totalOpened = 0
-		for _, item in ipairs(boxItems) do
-			local id = tonumber(item.id)
-			if id then
-				for i = 1, item.count do
-					pcall(function()
-						souvenirRemote:InvokeServer("OpenSouvenirBox", id)
-					end)
-					totalOpened = totalOpened + 1
-					task.wait(0.1)  -- delay between opens
-				end
-			end
-		end
-		
-		setStatus("Opened " .. totalOpened .. " boxes.")
+		openBoxesFromBag()
 	end)
 end)
